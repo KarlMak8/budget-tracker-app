@@ -423,9 +423,6 @@
             padding: 18px;
             border-radius: 18px;
             margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             border: 1px solid var(--border-account);
             transition: all 0.2s ease;
         }
@@ -436,15 +433,29 @@
         }
 
         .account-info {
-            flex: 1;
+            margin-bottom: 14px;
+        }
+
+        .account-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .account-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
         }
 
         .account-name {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: 6px;
-            letter-spacing: -0.2px;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
         }
 
         .account-details {
@@ -454,11 +465,11 @@
         }
 
         .account-balance {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 800;
             color: #667eea;
-            margin-right: 12px;
             letter-spacing: -0.5px;
+            flex-shrink: 0;
         }
 
         .sync-button {
@@ -470,9 +481,9 @@
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
-            margin-right: 8px;
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+            white-space: nowrap;
         }
 
         .sync-button:hover {
@@ -491,6 +502,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+            white-space: nowrap;
         }
 
         .remove-account-button:hover {
@@ -591,9 +603,120 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px var(--shadow-lg);
+            border-left: 4px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease-out;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .toast.success {
+            border-left-color: #22c55e;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex: 1;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .toast-close:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        .toast.removing {
+            animation: slideOutRight 0.3s ease-out forwards;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <div class="toast-container" id="toastContainer"></div>
+
     <div class="install-prompt" id="installPrompt">
         📱 Add to Home Screen for quick access!
     </div>
@@ -624,7 +747,6 @@
 
     <div class="accounts-section">
         <div class="accounts-title">Connected Accounts</div>
-        <div id="statusMessage"></div>
         <button class="add-account-button" onclick="connectPlaidAccount()">🏦 Connect Bank Account</button>
         <div id="totalBalance"></div>
         <div id="accountsList"></div>
@@ -640,6 +762,53 @@
         let transactions = [];
         let connectedAccounts = [];
         let plaidLinkToken = null;
+        let toastCounter = 0;
+
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 5000) {
+            const toastId = `toast-${toastCounter++}`;
+            const container = document.getElementById('toastContainer');
+            
+            const icons = {
+                success: '✓',
+                error: '✕',
+                info: 'ℹ',
+                loading: '<div class="spinner"></div>'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.id = toastId;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type] || icons.info}</div>
+                <div class="toast-message">${message}</div>
+                ${type !== 'loading' ? '<button class="toast-close" onclick="removeToast(\''+toastId+'\')">&times;</button>' : ''}
+            `;
+            
+            container.appendChild(toast);
+            
+            if (type !== 'loading' && duration > 0) {
+                setTimeout(() => removeToast(toastId), duration);
+            }
+            
+            return toastId;
+        }
+
+        function removeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }
+
+        function updateToast(toastId, message, type) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                removeToast(toastId);
+                setTimeout(() => showToast(message, type), 100);
+            }
+        }
 
         // Plaid configuration
         const PLAID_CONFIG = {
@@ -731,27 +900,30 @@
 
         // Plaid Integration Functions
         async function connectPlaidAccount() {
-            showStatus('Connecting to Plaid...', 'info');
+            const loadingToast = showToast('Connecting to Plaid...', 'loading', 0);
             
             try {
                 // Get link token from your backend
                 const linkToken = await createLinkToken();
                 
                 if (!linkToken) {
-                    showStatus('Unable to connect. Please set up your backend server.', 'error');
+                    removeToast(loadingToast);
+                    showToast('Unable to connect. Please set up your backend server.', 'error');
                     return;
                 }
+                
+                removeToast(loadingToast);
 
                 // Initialize Plaid Link
                 const handler = Plaid.create({
                     token: linkToken,
                     onSuccess: async (public_token, metadata) => {
-                        showStatus('Account connected! Fetching data...', 'success');
-                        await exchangePublicToken(public_token, metadata);
+                        const loadingToast = showToast('Account connected! Fetching data...', 'loading', 0);
+                        await exchangePublicToken(public_token, metadata, loadingToast);
                     },
                     onExit: (err, metadata) => {
                         if (err) {
-                            showStatus('Connection failed: ' + err.error_message, 'error');
+                            showToast('Connection failed: ' + err.error_message, 'error');
                         }
                     }
                 });
@@ -759,7 +931,7 @@
                 handler.open();
             } catch (error) {
                 console.error('Plaid connection error:', error);
-                showStatus('Error connecting to Plaid. See console for details.', 'error');
+                showToast('Error connecting to Plaid. See console for details.', 'error');
             }
         }
 
@@ -778,14 +950,12 @@
                 return data.link_token;
             } catch (error) {
                 console.error('Backend error:', error);
-                // For demo purposes, show instructions
-                showDemoMode();
                 return null;
             }
         }
 
         // Exchange public token for access token (needs backend)
-        async function exchangePublicToken(publicToken, metadata) {
+        async function exchangePublicToken(publicToken, metadata, loadingToast) {
             try {
                 const response = await fetch(`${API_URL}/api/exchange_public_token`, {
                     method: 'POST',
@@ -796,16 +966,17 @@
                 const data = await response.json();
                 
                 // Fetch account balances
-                await fetchAccountBalances(data.access_token, metadata);
+                await fetchAccountBalances(data.access_token, metadata, loadingToast);
                 
             } catch (error) {
                 console.error('Token exchange error:', error);
-                showStatus('Error saving account. Check backend server.', 'error');
+                if (loadingToast) removeToast(loadingToast);
+                showToast('Error saving account. Check backend server.', 'error');
             }
         }
 
         // Fetch account balances from Plaid
-        async function fetchAccountBalances(accessToken, metadata) {
+        async function fetchAccountBalances(accessToken, metadata, loadingToast) {
             try {
                 const response = await fetch(`${API_URL}/api/accounts/balance`, {
                     method: 'POST',
@@ -837,21 +1008,23 @@
 
                 saveData();
                 updateAccountsUI();
-                showStatus('Account(s) connected successfully!', 'success');
+                if (loadingToast) removeToast(loadingToast);
+                showToast(`${data.accounts.length} account(s) connected successfully!`, 'success');
                 
                 // Auto-sync transactions
                 setTimeout(() => syncAccountTransactions(accessToken), 1000);
                 
             } catch (error) {
                 console.error('Balance fetch error:', error);
-                showStatus('Error fetching account data.', 'error');
+                if (loadingToast) removeToast(loadingToast);
+                showToast('Error fetching account data.', 'error');
             }
         }
 
         // Sync transactions from connected accounts
         async function syncAccountTransactions(accessToken) {
             try {
-                showStatus('Syncing transactions...', 'info');
+                const loadingToast = showToast('Syncing transactions...', 'loading', 0);
                 
                 const response = await fetch(`${API_URL}/api/transactions/sync`, {
                     method: 'POST',
@@ -866,6 +1039,7 @@
                 const data = await response.json();
                 
                 // Import transactions
+                let newCount = 0;
                 data.transactions.forEach(plaidTx => {
                     // Check if transaction already exists
                     const exists = transactions.some(t => t.plaidId === plaidTx.transaction_id);
@@ -882,6 +1056,7 @@
                         };
                         
                         transactions.unshift(transaction);
+                        newCount++;
                         
                         // Update balance
                         balance += plaidTx.amount < 0 ? Math.abs(plaidTx.amount) : -Math.abs(plaidTx.amount);
@@ -890,11 +1065,12 @@
 
                 saveData();
                 updateUI();
-                showStatus(`Synced ${data.transactions.length} transactions!`, 'success');
+                removeToast(loadingToast);
+                showToast(`Synced ${newCount} new transaction(s)!`, 'success');
                 
             } catch (error) {
                 console.error('Transaction sync error:', error);
-                showStatus('Error syncing transactions.', 'error');
+                showToast('Error syncing transactions.', 'error');
             }
         }
 
@@ -902,6 +1078,7 @@
         async function syncAccount(accountIndex) {
             const account = connectedAccounts[accountIndex];
             if (account && account.accessToken) {
+                showToast(`Syncing ${account.institution}...`, 'info');
                 await syncAccountTransactions(account.accessToken);
                 
                 // Update last sync time
@@ -913,25 +1090,13 @@
 
         // Remove account
         function removeAccount(accountIndex) {
-            if (confirm('Remove this account? Transactions will remain.')) {
+            const account = connectedAccounts[accountIndex];
+            if (confirm(`Remove ${account.institution}? Transactions will remain.`)) {
                 connectedAccounts.splice(accountIndex, 1);
                 saveData();
                 updateAccountsUI();
-                showStatus('Account removed.', 'success');
+                showToast('Account disconnected successfully.', 'success');
             }
-        }
-
-        // Show demo mode instructions
-        function showDemoMode() {
-            const message = `
-                <div style="padding: 15px; background: #fff3cd; border-radius: 10px; margin-bottom: 15px;">
-                    <strong>⚠️ Backend Required</strong><br>
-                    <p style="margin: 10px 0; font-size: 14px;">To connect real bank accounts, you need a backend server. See the README for setup instructions.</p>
-                    <p style="margin: 10px 0; font-size: 14px;">For now, you can add demo accounts below:</p>
-                    <button onclick="addDemoAccount()" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Add Demo Account</button>
-                </div>
-            `;
-            document.getElementById('statusMessage').innerHTML = message;
         }
 
         // Add demo account for testing
@@ -964,7 +1129,7 @@
             connectedAccounts.push(accountData);
             saveData();
             updateAccountsUI();
-            showStatus('Demo account added!', 'success');
+            showToast(`${demo.name} connected successfully!`, 'success');
         }
 
         // Update accounts UI
@@ -973,7 +1138,7 @@
             const totalBalance = document.getElementById('totalBalance');
             
             if (connectedAccounts.length === 0) {
-                accountsList.innerHTML = '<div class="empty-text">No accounts connected yet.</div>';
+                accountsList.innerHTML = '<div class="empty-text">No accounts connected yet. Click the button above to get started!</div>';
                 totalBalance.innerHTML = '';
                 return;
             }
@@ -992,36 +1157,24 @@
                 <div class="account-item">
                     <div class="account-info">
                         <div class="account-name">
-                            ${account.institution} ${account.name}
-                            ${account.isDemo ? '(Demo)' : ''}
+                            ${account.institution}${account.isDemo ? ' (Demo)' : ''}
                         </div>
                         <div class="account-details">
-                            ${account.subtype} •••${account.mask}
+                            ${account.name} • ${account.subtype} •••${account.mask}
                         </div>
                         <div class="sync-status">
                             Last synced: ${formatDate(account.lastSync)}
                         </div>
                     </div>
-                    <div class="account-balance">${formatCurrency(account.balance)}</div>
-                    <div>
-                        ${!account.isDemo ? `<button class="sync-button" onclick="syncAccount(${index})">Sync</button>` : ''}
-                        <button class="remove-account-button" onclick="removeAccount(${index})">Remove</button>
+                    <div class="account-bottom">
+                        <div class="account-balance">${formatCurrency(account.balance)}</div>
+                        <div class="account-actions">
+                            ${!account.isDemo ? `<button class="sync-button" onclick="syncAccount(${index})">Sync</button>` : ''}
+                            <button class="remove-account-button" onclick="removeAccount(${index})">Remove</button>
+                        </div>
                     </div>
                 </div>
             `).join('');
-        }
-
-        // Show status message
-        function showStatus(message, type) {
-            const statusEl = document.getElementById('statusMessage');
-            const className = type === 'error' ? 'error-message' : type === 'success' ? 'success-message' : 'loading';
-            statusEl.innerHTML = `<div class="${className}">${message}</div>`;
-            
-            if (type === 'success' || type === 'error') {
-                setTimeout(() => {
-                    statusEl.innerHTML = '';
-                }, 5000);
-            }
         }
 
         // Helper function to get date X days ago
