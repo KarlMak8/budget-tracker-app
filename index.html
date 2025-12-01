@@ -374,6 +374,11 @@
             clientName: 'Budget Tracker'
         };
 
+        // Auto-detect API URL based on environment
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000'
+            : window.location.origin; // Use same origin on Render
+
         // Load data on startup
         function loadData() {
             const savedData = localStorage.getItem('budgetData');
@@ -488,7 +493,7 @@
         async function createLinkToken() {
             try {
                 // This needs to call YOUR backend server
-                const response = await fetch('http://localhost:3000/api/create_link_token', {
+                const response = await fetch(`${API_URL}/api/create_link_token`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -508,7 +513,7 @@
         // Exchange public token for access token (needs backend)
         async function exchangePublicToken(publicToken, metadata) {
             try {
-                const response = await fetch('http://localhost:3000/api/exchange_public_token', {
+                const response = await fetch(`${API_URL}/api/exchange_public_token`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ public_token: publicToken })
@@ -528,7 +533,7 @@
         // Fetch account balances from Plaid
         async function fetchAccountBalances(accessToken, metadata) {
             try {
-                const response = await fetch('http://localhost:3000/api/accounts/balance', {
+                const response = await fetch(`${API_URL}/api/accounts/balance`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ access_token: accessToken })
@@ -574,7 +579,7 @@
             try {
                 showStatus('Syncing transactions...', 'info');
                 
-                const response = await fetch('http://localhost:3000/api/transactions/sync', {
+                const response = await fetch(`${API_URL}/api/transactions/sync`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -800,7 +805,7 @@
         loadData();
         
         // Check if backend is available on startup
-        fetch('http://localhost:3000/api/health')
+        fetch(`${API_URL}/api/health`)
             .then(res => res.json())
             .then(() => {
                 console.log('Backend server connected');

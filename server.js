@@ -7,6 +7,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files (for single-service deployment on Render)
+app.use(express.static('.'));
+
 // Plaid client configuration
 const configuration = new Configuration({
     basePath: PlaidEnvironments.sandbox, // Use 'development' or 'production' for real accounts

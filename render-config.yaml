@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: budget-tracker-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PLAID_CLIENT_ID
+        sync: false
+      - key: PLAID_SECRET
+        sync: false
+      - key: PLAID_ENV
+        value: sandbox
+      - key: PORT
+        value: 3000
+    healthCheckPath: /api/health
