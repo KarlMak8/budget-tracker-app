@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <title>Budget Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            color: white;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .balance-container {
+            text-align: center;
+        }
+
+        .balance-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .balance-positive {
+            color: #4ade80;
+        }
+
+        .balance-negative {
+            color: #f87171;
+        }
+
+        .input-container {
+            background: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 16px;
+            margin-bottom: 12px;
+            background: #fafafa;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .button:active {
+            transform: scale(0.98);
+        }
+
+        .income-button {
+            background: #4ade80;
+        }
+
+        .expense-button {
+            background: #f87171;
+        }
+
+        .transactions-container {
+            padding: 0 20px;
+        }
+
+        .transactions-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .transaction-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .transaction-details {
+            flex: 1;
+        }
+
+        .transaction-description {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .transaction-amount {
+            font-size: 18px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .income-amount {
+            color: #4ade80;
+        }
+
+        .expense-amount {
+            color: #f87171;
+        }
+
+        .empty-text {
+            text-align: center;
+            color: #999;
+            font-size: 16px;
+            margin-top: 40px;
+        }
+
+        .delete-button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .install-prompt {
+            background: #3b82f6;
+            color: white;
+            padding: 15px 20px;
+            margin: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            display: none;
+        }
+
+        .install-prompt.show {
+            display: block;
+        }
+
+        .accounts-section {
+            background: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .accounts-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .add-account-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .account-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .account-info {
+            flex: 1;
+        }
+
+        .account-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .account-details {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .account-balance {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 10px;
+        }
+
+        .sync-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .remove-account-button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3a3;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .sync-status {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .total-accounts-balance {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .total-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="install-prompt" id="installPrompt">
+        📱 Add to Home Screen for quick access!
+    </div>
+
+    <div class="header">
+        <div class="header-title">Budget Tracker</div>
+        <div class="balance-container">
+            <div class="balance-label">Current Balance</div>
+            <div class="balance-amount" id="balanceAmount">$0.00</div>
+        </div>
+    </div>
+
+    <div class="input-container">
+        <input type="number" class="input" id="amountInput" placeholder="Amount" step="0.01">
+        <input type="text" class="input" id="descriptionInput" placeholder="Description (optional)">
+        <div class="button-row">
+            <button class="button income-button" onclick="addTransaction('income')">+ Income</button>
+            <button class="button expense-button" onclick="addTransaction('expense')">- Expense</button>
+        </div>
+    </div>
+
+    <div class="accounts-section">
+        <div class="accounts-title">Connected Accounts</div>
+        <div id="statusMessage"></div>
+        <button class="add-account-button" onclick="connectPlaidAccount()">🏦 Connect Bank Account</button>
+        <div id="totalBalance"></div>
+        <div id="accountsList"></div>
+    </div>
+
+    <div class="transactions-container">
+        <div class="transactions-title">Recent Transactions</div>
+        <div id="transactionsList"></div>
+    </div>
+
+    <script>
+        let balance = 0;
+        let transactions = [];
+        let connectedAccounts = [];
+        let plaidLinkToken = null;
+
+        // Plaid configuration
+        const PLAID_CONFIG = {
+            // For demo purposes - you'll need to replace this with your actual backend
+            useSandbox: true,
+            clientName: 'Budget Tracker'
+        };
+
+        // Load data on startup
+        function loadData() {
+            const savedData = localStorage.getItem('budgetData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                balance = data.balance || 0;
+                transactions = data.transactions || [];
+                connectedAccounts = data.connectedAccounts || [];
+                updateUI();
+                updateAccountsUI();
+            }
+        }
+
+        // Save data
+        function saveData() {
+            const data = { balance, transactions, connectedAccounts };
+            localStorage.setItem('budgetData', JSON.stringify(data));
+        }
+
+        // Format currency
+        function formatCurrency(value) {
+            return '$' + Math.abs(value).toFixed(2);
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Add transaction
+        function addTransaction(type) {
+            const amountInput = document.getElementById('amountInput');
+            const descriptionInput = document.getElementById('descriptionInput');
+            
+            const amount = parseFloat(amountInput.value);
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid positive number');
+                return;
+            }
+
+            const transaction = {
+                id: Date.now().toString(),
+                type: type,
+                amount: amount,
+                description: descriptionInput.value || (type === 'income' ? 'Income' : 'Expense'),
+                date: new Date().toISOString()
+            };
+
+            balance = type === 'income' ? balance + amount : balance - amount;
+            transactions.unshift(transaction);
+
+            amountInput.value = '';
+            descriptionInput.value = '';
+
+            saveData();
+            updateUI();
+        }
+
+        // Delete transaction
+        function deleteTransaction(id) {
+            if (!confirm('Delete this transaction?')) return;
+
+            const transaction = transactions.find(t => t.id === id);
+            if (transaction) {
+                balance = transaction.type === 'income' 
+                    ? balance - transaction.amount 
+                    : balance + transaction.amount;
+                
+                transactions = transactions.filter(t => t.id !== id);
+                saveData();
+                updateUI();
+            }
+        }
+
+        // Plaid Integration Functions
+        async function connectPlaidAccount() {
+            showStatus('Connecting to Plaid...', 'info');
+            
+            try {
+                // Get link token from your backend
+                const linkToken = await createLinkToken();
+                
+                if (!linkToken) {
+                    showStatus('Unable to connect. Please set up your backend server.', 'error');
+                    return;
+                }
+
+                // Initialize Plaid Link
+                const handler = Plaid.create({
+                    token: linkToken,
+                    onSuccess: async (public_token, metadata) => {
+                        showStatus('Account connected! Fetching data...', 'success');
+                        await exchangePublicToken(public_token, metadata);
+                    },
+                    onExit: (err, metadata) => {
+                        if (err) {
+                            showStatus('Connection failed: ' + err.error_message, 'error');
+                        }
+                    }
+                });
+
+                handler.open();
+            } catch (error) {
+                console.error('Plaid connection error:', error);
+                showStatus('Error connecting to Plaid. See console for details.', 'error');
+            }
+        }
+
+        // Create link token (you need a backend for this)
+        async function createLinkToken() {
+            try {
+                // This needs to call YOUR backend server
+                const response = await fetch('http://localhost:3000/api/create_link_token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) throw new Error('Backend not available');
+                
+                const data = await response.json();
+                return data.link_token;
+            } catch (error) {
+                console.error('Backend error:', error);
+                // For demo purposes, show instructions
+                showDemoMode();
+                return null;
+            }
+        }
+
+        // Exchange public token for access token (needs backend)
+        async function exchangePublicToken(publicToken, metadata) {
+            try {
+                const response = await fetch('http://localhost:3000/api/exchange_public_token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ public_token: publicToken })
+                });
+
+                const data = await response.json();
+                
+                // Fetch account balances
+                await fetchAccountBalances(data.access_token, metadata);
+                
+            } catch (error) {
+                console.error('Token exchange error:', error);
+                showStatus('Error saving account. Check backend server.', 'error');
+            }
+        }
+
+        // Fetch account balances from Plaid
+        async function fetchAccountBalances(accessToken, metadata) {
+            try {
+                const response = await fetch('http://localhost:3000/api/accounts/balance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ access_token: accessToken })
+                });
+
+                const data = await response.json();
+                
+                // Add accounts to our list
+                data.accounts.forEach(account => {
+                    const accountData = {
+                        id: account.account_id,
+                        accessToken: accessToken,
+                        name: account.name,
+                        officialName: account.official_name || account.name,
+                        type: account.type,
+                        subtype: account.subtype,
+                        mask: account.mask,
+                        balance: account.balances.current,
+                        availableBalance: account.balances.available,
+                        currency: account.balances.iso_currency_code || 'USD',
+                        institution: metadata.institution.name,
+                        lastSync: new Date().toISOString()
+                    };
+                    
+                    connectedAccounts.push(accountData);
+                });
+
+                saveData();
+                updateAccountsUI();
+                showStatus('Account(s) connected successfully!', 'success');
+                
+                // Auto-sync transactions
+                setTimeout(() => syncAccountTransactions(accessToken), 1000);
+                
+            } catch (error) {
+                console.error('Balance fetch error:', error);
+                showStatus('Error fetching account data.', 'error');
+            }
+        }
+
+        // Sync transactions from connected accounts
+        async function syncAccountTransactions(accessToken) {
+            try {
+                showStatus('Syncing transactions...', 'info');
+                
+                const response = await fetch('http://localhost:3000/api/transactions/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        access_token: accessToken,
+                        start_date: getDateDaysAgo(30),
+                        end_date: new Date().toISOString().split('T')[0]
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Import transactions
+                data.transactions.forEach(plaidTx => {
+                    // Check if transaction already exists
+                    const exists = transactions.some(t => t.plaidId === plaidTx.transaction_id);
+                    if (!exists) {
+                        const transaction = {
+                            id: Date.now().toString() + Math.random(),
+                            plaidId: plaidTx.transaction_id,
+                            type: plaidTx.amount < 0 ? 'income' : 'expense',
+                            amount: Math.abs(plaidTx.amount),
+                            description: plaidTx.name,
+                            date: plaidTx.date,
+                            category: plaidTx.category ? plaidTx.category[0] : 'Other',
+                            fromPlaid: true
+                        };
+                        
+                        transactions.unshift(transaction);
+                        
+                        // Update balance
+                        balance += plaidTx.amount < 0 ? Math.abs(plaidTx.amount) : -Math.abs(plaidTx.amount);
+                    }
+                });
+
+                saveData();
+                updateUI();
+                showStatus(`Synced ${data.transactions.length} transactions!`, 'success');
+                
+            } catch (error) {
+                console.error('Transaction sync error:', error);
+                showStatus('Error syncing transactions.', 'error');
+            }
+        }
+
+        // Sync specific account
+        async function syncAccount(accountIndex) {
+            const account = connectedAccounts[accountIndex];
+            if (account && account.accessToken) {
+                await syncAccountTransactions(account.accessToken);
+                
+                // Update last sync time
+                account.lastSync = new Date().toISOString();
+                saveData();
+                updateAccountsUI();
+            }
+        }
+
+        // Remove account
+        function removeAccount(accountIndex) {
+            if (confirm('Remove this account? Transactions will remain.')) {
+                connectedAccounts.splice(accountIndex, 1);
+                saveData();
+                updateAccountsUI();
+                showStatus('Account removed.', 'success');
+            }
+        }
+
+        // Show demo mode instructions
+        function showDemoMode() {
+            const message = `
+                <div style="padding: 15px; background: #fff3cd; border-radius: 10px; margin-bottom: 15px;">
+                    <strong>⚠️ Backend Required</strong><br>
+                    <p style="margin: 10px 0; font-size: 14px;">To connect real bank accounts, you need a backend server. See the README for setup instructions.</p>
+                    <p style="margin: 10px 0; font-size: 14px;">For now, you can add demo accounts below:</p>
+                    <button onclick="addDemoAccount()" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Add Demo Account</button>
+                </div>
+            `;
+            document.getElementById('statusMessage').innerHTML = message;
+        }
+
+        // Add demo account for testing
+        function addDemoAccount() {
+            const demoAccounts = [
+                { name: 'Chase Checking', type: 'depository', subtype: 'checking', balance: 2500.50, mask: '1234' },
+                { name: 'Amex Credit Card', type: 'credit', subtype: 'credit card', balance: -850.25, mask: '9876' },
+                { name: 'Wells Fargo Savings', type: 'depository', subtype: 'savings', balance: 5420.00, mask: '5555' },
+                { name: 'Discover Card', type: 'credit', subtype: 'credit card', balance: -320.75, mask: '4321' }
+            ];
+            
+            const demo = demoAccounts[Math.floor(Math.random() * demoAccounts.length)];
+            
+            const accountData = {
+                id: 'demo_' + Date.now(),
+                accessToken: 'demo',
+                name: demo.name,
+                officialName: demo.name,
+                type: demo.type,
+                subtype: demo.subtype,
+                mask: demo.mask,
+                balance: demo.balance,
+                availableBalance: demo.balance,
+                currency: 'USD',
+                institution: 'Demo Bank',
+                lastSync: new Date().toISOString(),
+                isDemo: true
+            };
+            
+            connectedAccounts.push(accountData);
+            saveData();
+            updateAccountsUI();
+            showStatus('Demo account added!', 'success');
+        }
+
+        // Update accounts UI
+        function updateAccountsUI() {
+            const accountsList = document.getElementById('accountsList');
+            const totalBalance = document.getElementById('totalBalance');
+            
+            if (connectedAccounts.length === 0) {
+                accountsList.innerHTML = '<div class="empty-text">No accounts connected yet.</div>';
+                totalBalance.innerHTML = '';
+                return;
+            }
+
+            // Calculate total
+            const total = connectedAccounts.reduce((sum, acc) => sum + (acc.balance || 0), 0);
+            
+            totalBalance.innerHTML = `
+                <div class="total-accounts-balance">
+                    <div class="total-label">Total Account Balance</div>
+                    <div class="total-amount">${formatCurrency(total)}</div>
+                </div>
+            `;
+
+            accountsList.innerHTML = connectedAccounts.map((account, index) => `
+                <div class="account-item">
+                    <div class="account-info">
+                        <div class="account-name">
+                            ${account.institution} ${account.name}
+                            ${account.isDemo ? '(Demo)' : ''}
+                        </div>
+                        <div class="account-details">
+                            ${account.subtype} •••${account.mask}
+                        </div>
+                        <div class="sync-status">
+                            Last synced: ${formatDate(account.lastSync)}
+                        </div>
+                    </div>
+                    <div class="account-balance">${formatCurrency(account.balance)}</div>
+                    <div>
+                        ${!account.isDemo ? `<button class="sync-button" onclick="syncAccount(${index})">Sync</button>` : ''}
+                        <button class="remove-account-button" onclick="removeAccount(${index})">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            const className = type === 'error' ? 'error-message' : type === 'success' ? 'success-message' : 'loading';
+            statusEl.innerHTML = `<div class="${className}">${message}</div>`;
+            
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    statusEl.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Helper function to get date X days ago
+        function getDateDaysAgo(days) {
+            const date = new Date();
+            date.setDate(date.getDate() - days);
+            return date.toISOString().split('T')[0];
+        }
+
+        // Update UI
+        function updateUI() {
+            // Update balance
+            const balanceEl = document.getElementById('balanceAmount');
+            balanceEl.textContent = (balance >= 0 ? '' : '-') + formatCurrency(balance);
+            balanceEl.className = 'balance-amount ' + (balance >= 0 ? 'balance-positive' : 'balance-negative');
+
+            // Update transactions list
+            const listEl = document.getElementById('transactionsList');
+            if (transactions.length === 0) {
+                listEl.innerHTML = '<div class="empty-text">No transactions yet. Add your first transaction above!</div>';
+            } else {
+                listEl.innerHTML = transactions.map(t => `
+                    <div class="transaction-item">
+                        <div class="transaction-details">
+                            <div class="transaction-description">${t.description}</div>
+                            <div class="transaction-date">${formatDate(t.date)}</div>
+                        </div>
+                        <div class="transaction-amount ${t.type === 'income' ? 'income-amount' : 'expense-amount'}">
+                            ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                        </div>
+                        <button class="delete-button" onclick="deleteTransaction('${t.id}')">Delete</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Install prompt for PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('show');
+        });
+
+        document.getElementById('installPrompt').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installPrompt').classList.remove('show');
+            }
+        });
+
+        // Initialize
+        loadData();
+        
+        // Check if backend is available on startup
+        fetch('http://localhost:3000/api/health')
+            .then(res => res.json())
+            .then(() => {
+                console.log('Backend server connected');
+            })
+            .catch(() => {
+                console.log('Backend server not available - demo mode');
+                showDemoMode();
+            });
+    </script>
+</body>
+</html>
