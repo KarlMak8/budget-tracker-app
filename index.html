@@ -10,6 +10,44 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
     <style>
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #e9ecef;
+            --bg-card: #ffffff;
+            --bg-input: #f9fafb;
+            --bg-account-item: #f8f9fa;
+            --bg-account-item-end: #f1f3f5;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --border-color: #e5e7eb;
+            --border-account: #e9ecef;
+            --shadow-sm: rgba(0, 0, 0, 0.06);
+            --shadow-md: rgba(0, 0, 0, 0.08);
+            --shadow-lg: rgba(0, 0, 0, 0.1);
+            --header-overlay-1: rgba(255, 255, 255, 0.1);
+            --header-overlay-2: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --bg-account-item: #1e293b;
+            --bg-account-item-end: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-tertiary: #94a3b8;
+            --border-color: #334155;
+            --border-account: #334155;
+            --shadow-sm: rgba(0, 0, 0, 0.3);
+            --shadow-md: rgba(0, 0, 0, 0.4);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+            --header-overlay-1: rgba(255, 255, 255, 0.05);
+            --header-overlay-2: rgba(255, 255, 255, 0.02);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,38 +56,109 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f5f5;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
             min-height: 100vh;
-            padding-bottom: 20px;
+            padding-bottom: 40px;
+            transition: background 0.3s ease;
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 30px 20px;
+            padding: 40px 24px 50px;
             color: white;
-            border-radius: 0 0 30px 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 0 0 40px 40px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: var(--header-overlay-1);
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 200px;
+            height: 200px;
+            background: var(--header-overlay-2);
+            border-radius: 50%;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
         }
 
         .header-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
         }
 
         .balance-container {
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
 
         .balance-label {
-            font-size: 16px;
-            opacity: 0.9;
-            margin-bottom: 8px;
+            font-size: 15px;
+            opacity: 0.85;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
         }
 
         .balance-amount {
-            font-size: 48px;
-            font-weight: bold;
+            font-size: 56px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .balance-positive {
@@ -61,51 +170,87 @@
         }
 
         .input-container {
-            background: white;
-            margin: 20px;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--bg-card);
+            margin: -20px 20px 20px;
+            padding: 24px;
+            border-radius: 24px;
+            box-shadow: 0 8px 30px var(--shadow-md);
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
         }
 
         .input {
             width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px 20px;
             font-size: 16px;
-            margin-bottom: 12px;
-            background: #fafafa;
+            margin-bottom: 14px;
+            background: var(--bg-input);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: var(--bg-card);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
         .button-row {
             display: flex;
-            gap: 10px;
-            margin-top: 8px;
+            gap: 12px;
+            margin-top: 12px;
         }
 
         .button {
             flex: 1;
-            padding: 15px;
+            padding: 18px;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
             color: white;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .button:hover::before {
+            opacity: 1;
         }
 
         .button:active {
-            transform: scale(0.98);
+            transform: scale(0.96);
         }
 
         .income-button {
-            background: #4ade80;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
         }
 
         .expense-button {
-            background: #f87171;
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
         }
 
         .transactions-container {
@@ -113,21 +258,29 @@
         }
 
         .transactions-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
         }
 
         .transaction-item {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            background: var(--bg-card);
+            padding: 18px 20px;
+            border-radius: 18px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 15px var(--shadow-sm);
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .transaction-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px var(--shadow-lg);
         }
 
         .transaction-details {
@@ -136,99 +289,150 @@
 
         .transaction-description {
             font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            letter-spacing: -0.2px;
         }
 
         .transaction-date {
-            font-size: 12px;
-            color: #999;
+            font-size: 13px;
+            color: var(--text-tertiary);
+            font-weight: 500;
         }
 
         .transaction-amount {
-            font-size: 18px;
-            font-weight: bold;
-            margin-left: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            margin-left: 12px;
+            letter-spacing: -0.5px;
         }
 
         .income-amount {
-            color: #4ade80;
+            color: #22c55e;
         }
 
         .expense-amount {
-            color: #f87171;
+            color: #ef4444;
         }
 
         .empty-text {
             text-align: center;
-            color: #999;
+            color: var(--text-tertiary);
             font-size: 16px;
-            margin-top: 40px;
+            margin-top: 60px;
+            font-weight: 500;
         }
 
         .delete-button {
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 12px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
-            margin-left: 10px;
+            margin-left: 12px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+        }
+
+        .delete-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+        }
+
+        .delete-button:active {
+            transform: scale(0.95);
         }
 
         .install-prompt {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
-            padding: 15px 20px;
+            padding: 18px 24px;
             margin: 20px;
-            border-radius: 10px;
+            border-radius: 20px;
             text-align: center;
             cursor: pointer;
             display: none;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .install-prompt:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.4);
         }
 
         .install-prompt.show {
             display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .accounts-section {
-            background: white;
+            background: var(--bg-card);
             margin: 20px;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            border-radius: 24px;
+            box-shadow: 0 8px 30px var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
         }
 
         .accounts-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
         }
 
         .add-account-button {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
             cursor: pointer;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .add-account-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .add-account-button:active {
+            transform: scale(0.98);
         }
 
         .account-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--bg-account-item) 0%, var(--bg-account-item-end) 100%);
+            padding: 18px;
+            border-radius: 18px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid var(--border-account);
+            transition: all 0.2s ease;
+        }
+
+        .account-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px var(--shadow-md);
         }
 
         .account-info {
@@ -237,92 +441,155 @@
 
         .account-name {
             font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            letter-spacing: -0.2px;
         }
 
         .account-details {
             font-size: 13px;
-            color: #666;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         .account-balance {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 20px;
+            font-weight: 800;
             color: #667eea;
-            margin-right: 10px;
+            margin-right: 12px;
+            letter-spacing: -0.5px;
         }
 
         .sync-button {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 12px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
-            margin-right: 5px;
+            margin-right: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+        }
+
+        .sync-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
         }
 
         .remove-account-button {
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 12px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+        }
+
+        .remove-account-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
         }
 
         .loading {
             text-align: center;
-            color: #999;
-            padding: 20px;
+            color: var(--text-tertiary);
+            padding: 24px;
+            font-weight: 500;
         }
 
         .error-message {
-            background: #fee;
-            color: #c33;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 14px;
             font-size: 14px;
+            font-weight: 600;
+            border: 1px solid #fca5a5;
+        }
+
+        [data-theme="dark"] .error-message {
+            background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+            color: #fecaca;
+            border-color: #991b1b;
         }
 
         .success-message {
-            background: #efe;
-            color: #3a3;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 14px;
             font-size: 14px;
+            font-weight: 600;
+            border: 1px solid #6ee7b7;
+        }
+
+        [data-theme="dark"] .success-message {
+            background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+            color: #a7f3d0;
+            border-color: #065f46;
         }
 
         .sync-status {
             font-size: 12px;
-            color: #999;
-            margin-top: 5px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+            font-weight: 500;
         }
 
         .total-accounts-balance {
-            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 18px;
             text-align: center;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .total-accounts-balance {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.25) 100%);
+            border-color: rgba(102, 126, 234, 0.3);
         }
 
         .total-label {
             font-size: 14px;
-            color: #666;
-            margin-bottom: 5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
 
         .total-amount {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 32px;
+            font-weight: 800;
             color: #667eea;
+            letter-spacing: -1px;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Add subtle animation to elements on load */
+        .transaction-item {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -332,10 +599,17 @@
     </div>
 
     <div class="header">
-        <div class="header-title">Budget Tracker</div>
-        <div class="balance-container">
-            <div class="balance-label">Current Balance</div>
-            <div class="balance-amount" id="balanceAmount">$0.00</div>
+        <div class="header-content">
+            <div class="header-title">
+                Budget Tracker
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+            <div class="balance-container">
+                <div class="balance-label">Current Balance</div>
+                <div class="balance-amount" id="balanceAmount">$0.00</div>
+            </div>
         </div>
     </div>
 
@@ -801,7 +1075,28 @@
             }
         });
 
+        // Dark mode functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update icon
+            document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Load theme preference
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        }
+
         // Initialize
+        loadTheme();
         loadData();
         
         // Check if backend is available on startup
