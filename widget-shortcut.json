@@ -1,0 +1,40 @@
+{
+  "WFWorkflowMinimumClientVersion": 900,
+  "WFWorkflowMinimumClientVersionString": "900",
+  "WFWorkflowIcon": {
+    "WFWorkflowIconStartColor": 4282601983,
+    "WFWorkflowIconGlyphNumber": 59735
+  },
+  "WFWorkflowTypes": [
+    "Watch",
+    "NCWidget"
+  ],
+  "WFWorkflowInputContentItemClasses": [],
+  "WFWorkflowImportQuestions": [],
+  "WFWorkflowActions": [
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.url",
+      "WFWorkflowActionParameters": {
+        "WFURLActionURL": "http://localhost:3000"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.gettext",
+      "WFWorkflowActionParameters": {
+        "WFTextActionText": "localStorage.getItem('widgetData')"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.runjavascriptonwebpage",
+      "WFWorkflowActionParameters": {
+        "WFJavaScriptActionCode": "const data = JSON.parse(localStorage.getItem('widgetData') || '{}');\nconst balance = data.balance || 0;\nconst budgetGoal = data.budgetGoal || 0;\nconst percentage = data.percentage || 100;\n\nconst formatted = Math.abs(balance).toFixed(2);\nconst balanceStr = balance >= 0 ? `$${formatted}` : `-$${formatted}`;\n\ncompletion({balance: balanceStr, percentage: Math.round(percentage), goal: budgetGoal});"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.showresult",
+      "WFWorkflowActionParameters": {
+        "Text": "Balance: ${balance}\n${percentage}% of $${goal}"
+      }
+    }
+  ]
+}
